@@ -1,5 +1,7 @@
 package com.priscila.usermanager.service;
 
+import com.priscila.usermanager.dto.UserRequestDTO;
+import com.priscila.usermanager.dto.UserResponseDTO;
 import com.priscila.usermanager.model.User;
 import com.priscila.usermanager.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -16,30 +18,36 @@ public class UserService {
     }
 
     // CREATE
-    public User create(User user) {
-        return repository.save(user);
+    public UserResponseDTO create(UserRequestDTO dto) {
+        User user = toEntity(dto);
+        User saved = repository.save(user);
+        return toResponseDTO(saved);
     }
 
     // READ - LIST
-    public List<User> findAll() {
-        return repository.findAll();
+    public List<UserResponseDTO> findAll() {
+        return repository.findAll()
+                .stream()
+                .map(this::toResponseDTO)
+                .toList();
     }
 
     // READ - BY ID
-    public User findById(Long id) {
-        return repository.findById(id)
+    public UserResponseDTO findById(Long id) {
+        User user = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        return toResponseDTO(user);
     }
 
     // UPDATE
-    public User update(Long id, User user) {
+    public UserResponseDTO update(Long id, UserRequestDTO dto) {
         User existing = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        existing.setNome(user.getNome());
-        existing.setEmail(user.getEmail());
+        existing.setNome(dto.getNome());
+        existing.setEmail(dto.getEmail());
 
-        return repository.save(existing);
+        return toResponseDTO(repository.save(existing));
     }
 
     //DELETE
@@ -49,4 +57,22 @@ public class UserService {
         }
         repository.deleteById(id);
     }
+
+    // ===== MÉTODOS AUXILIARES (MAPPERS) =====
+
+    private User toEntity(UserRequestDTO dto) {
+        User user = new User();
+        user.setNome(dto.getNome());
+        user.setEmail(dto.getEmail());
+        return user;
+    }
+
+    private UserResponseDTO toResponseDTO(User user) {
+        return new UserResponseDTO(
+                user.getId(),
+                user.getNome(),
+                user.getEmail()
+        );
+    }
 }
+
