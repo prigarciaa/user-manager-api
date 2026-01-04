@@ -8,6 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import com.priscila.usermanager.exception.ResourceNotFoundException;
+
+
 @Service
 public class UserService {
 
@@ -35,14 +38,14 @@ public class UserService {
     // READ - BY ID
     public UserResponseDTO findById(Long id) {
         User user = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
         return toResponseDTO(user);
     }
 
     // UPDATE
     public UserResponseDTO update(Long id, UserRequestDTO dto) {
         User existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
         existing.setNome(dto.getNome());
         existing.setEmail(dto.getEmail());
@@ -52,11 +55,12 @@ public class UserService {
 
     //DELETE
     public void delete(Long id) {
-        if (!repository.existsById(id)) {
-            throw new RuntimeException("Usuário não encontrado");
-        }
-        repository.deleteById(id);
+        User user = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+
+        repository.delete(user);
     }
+
 
     // ===== MÉTODOS AUXILIARES (MAPPERS) =====
 
